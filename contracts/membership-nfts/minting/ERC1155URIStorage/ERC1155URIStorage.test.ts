@@ -56,5 +56,24 @@ describe("ERC1155URIStorage", () => {
         "Invalid tokenURI"
       );
     });
+
+    it("Should give list of uris for provided token ids", async () => {
+      const zeroTokenIdURI = "uri-for-token-with-id-0";
+      const setURITx1 = await uriStorage.setURI(0, zeroTokenIdURI);
+
+      await setURITx1.wait();
+
+      const oneTokenIdURI = "uri-for-token-with-id-1";
+      const setURITx2 = await uriStorage.setURI(1, oneTokenIdURI);
+
+      await setURITx2.wait();
+
+      expect(await uriStorage.uris([0, 1, 2, 10])).to.deep.equal([
+        zeroTokenIdURI,
+        oneTokenIdURI,
+        "",
+        "",
+      ]);
+    });
   });
 });
