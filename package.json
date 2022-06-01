@@ -1,6 +1,9 @@
 {
   "name": "company-dao-solidity",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=10.0.0"
+  },
   "main": "index.js",
   "license": "MIT",
   "scripts": {
