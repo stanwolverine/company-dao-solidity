@@ -7,7 +7,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "export TEST_DIR=./contracts && hardhat test"
+    "test": "export TEST_DIR=./contracts && hardhat watch test"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.0",
@@ -33,6 +33,7 @@
     "ethers": "^5.0.0",
     "hardhat": "^2.9.3",
     "hardhat-gas-reporter": "^1.0.4",
+    "hardhat-watcher": "^2.3.0",
     "prettier": "^2.3.2",
     "prettier-plugin-solidity": "^1.0.0-beta.13",
     "solhint": "^3.3.6",
