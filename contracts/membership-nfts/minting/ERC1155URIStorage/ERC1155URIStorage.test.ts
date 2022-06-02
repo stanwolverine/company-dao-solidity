@@ -53,7 +53,7 @@ describe("ERC1155URIStorage", () => {
       const invalidURI = "";
 
       await expect(uriStorage.setURI(0, invalidURI)).to.be.revertedWith(
-        "Invalid tokenURI"
+        "URIStorage: Invalid tokenURI"
       );
     });
 

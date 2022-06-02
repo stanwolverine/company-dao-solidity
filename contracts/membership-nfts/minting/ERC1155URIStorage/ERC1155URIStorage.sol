@@ -23,7 +23,7 @@ abstract contract ERC1155URIStorage is ERC1155 {
     }
 
     function _setURI(uint tokenId, string memory tokenURI) internal virtual {
-        require(bytes(tokenURI).length > 0, "Invalid tokenURI");
+        require(bytes(tokenURI).length > 0, "URIStorage: Invalid tokenURI");
 
         _tokenURIs[tokenId] = tokenURI;
 
