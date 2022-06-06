@@ -21,4 +21,8 @@ contract ERC1155KnownTokens_Wrapper is ERC1155(""), ERC1155KnownTokens {
     function beforeTokenTransfer(address from, address to, uint256[] calldata ids, uint256[] calldata amounts) public virtual {
         _beforeTokenTransfer(_msgSender(), from, to, ids, amounts, "");
     }
+
+    function addKnownToken() public returns(uint256 tokenId) {
+        return _addKnownToken();
+    }
 }

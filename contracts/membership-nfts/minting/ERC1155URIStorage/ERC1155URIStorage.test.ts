@@ -16,11 +16,13 @@ describe("ERC1155URIStorage", () => {
     });
 
     it("Should not have uri for unknown token ids", async () => {
+      // assert
       expect(await uriStorage.uri(0)).to.equal("");
       expect(await uriStorage.uri(1)).to.equal("");
     });
 
     it("Should set uri for token ids", async () => {
+      // act
       const zeroTokenIdURI = "uri-for-token-with-id-0";
       const setURITx1 = await uriStorage.setURI(0, zeroTokenIdURI);
 
@@ -36,12 +38,14 @@ describe("ERC1155URIStorage", () => {
 
       await setURITx3.wait();
 
+      // assert
       expect(await uriStorage.uri(0)).to.equal(zeroTokenIdURI);
       expect(await uriStorage.uri(1)).to.equal(oneTokenIdURI);
       expect(await uriStorage.uri(3)).to.equal(threeTokenIdURI);
     });
 
     it("Should emit `URI` event after setting token uri", async () => {
+      // act & assert
       const zeroTokenIdURI = "uri-for-token-with-id-0";
 
       await expect(uriStorage.setURI(0, zeroTokenIdURI))
@@ -50,6 +54,7 @@ describe("ERC1155URIStorage", () => {
     });
 
     it("Should revert txn if uri is invalid", async () => {
+      // act & assert
       const invalidURI = "";
 
       await expect(uriStorage.setURI(0, invalidURI)).to.be.revertedWith(
@@ -58,6 +63,7 @@ describe("ERC1155URIStorage", () => {
     });
 
     it("Should give list of uris for provided token ids", async () => {
+      // act
       const zeroTokenIdURI = "uri-for-token-with-id-0";
       const setURITx1 = await uriStorage.setURI(0, zeroTokenIdURI);
 
@@ -68,6 +74,7 @@ describe("ERC1155URIStorage", () => {
 
       await setURITx2.wait();
 
+      // assert
       expect(await uriStorage.uris([0, 1, 2, 10])).to.deep.equal([
         zeroTokenIdURI,
         oneTokenIdURI,

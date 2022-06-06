@@ -1,7 +1,7 @@
-import { ethers } from "hardhat";
-import { expect } from "chai";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { expect } from "chai";
 import { BigNumber } from "ethers";
+import { ethers } from "hardhat";
 
 describe("ERC1155KnownTokens", () => {
   describe("Transactions", () => {
@@ -23,36 +23,67 @@ describe("ERC1155KnownTokens", () => {
       await ERC1155KnownTokensWrapper.deployed();
     });
 
-    it("Should give all approved tokens", async () => {
-      expect(await ERC1155KnownTokensWrapper.tokens()).to.deep.equal([]);
+    it("Should return correct first and last known token ids", async () => {
+      // act
+      const [initialFirstTokenId, initialLastTokenId]: BigNumber[] =
+        await ERC1155KnownTokensWrapper.firstAndLastTokenIds();
 
-      const tokenNames = ["TestToken1", "TestToken2"];
+      const firstTxn = await ERC1155KnownTokensWrapper.addKnownToken();
+      await firstTxn.wait();
 
-      for await (const tokenName of tokenNames) {
-        const firstTxn = await ERC1155KnownTokensWrapper.addToken(tokenName);
+      const [firstTokenIdv1, lastTokenIdv1]: BigNumber[] =
+        await ERC1155KnownTokensWrapper.firstAndLastTokenIds();
 
-        await firstTxn.wait();
-      }
+      const secondTxn = await ERC1155KnownTokensWrapper.addKnownToken();
+      await secondTxn.wait();
 
-      expect(await ERC1155KnownTokensWrapper.tokens()).to.deep.equal(
-        tokenNames
-      );
+      // assert
+      expect(initialFirstTokenId.eq(BigNumber.from(0))).to.equal(true);
+      expect(initialLastTokenId.eq(BigNumber.from(0))).to.equal(true);
+
+      expect(firstTokenIdv1.eq(BigNumber.from(1))).to.equal(true);
+      expect(lastTokenIdv1.eq(BigNumber.from(1))).to.equal(true);
+
+      const [firstTokenIdv2, lastTokenIdv2]: BigNumber[] =
+        await ERC1155KnownTokensWrapper.firstAndLastTokenIds();
+
+      expect(firstTokenIdv2.eq(BigNumber.from(1))).to.equal(true);
+      expect(lastTokenIdv2.eq(BigNumber.from(2))).to.equal(true);
     });
 
-    it("Should revert `_beforeTokenTransfer` transaction, when called with unapproved token", async () => {
-      await expect(
-        ERC1155KnownTokensWrapper.beforeTokenTransfer(
-          ethers.constants.AddressZero,
-          add1.address,
-          [1],
-          [100]
-        )
-      ).to.be.revertedWith("ERC1155KnownTokens: Unknown TokenId");
+    it("Should add new known token when called by owner", async () => {
+      // act
+      await ERC1155KnownTokensWrapper.addKnownToken();
 
-      const txn = await ERC1155KnownTokensWrapper.addToken("TestToken");
+      const isTokenKnown = await ERC1155KnownTokensWrapper.isTokenKnown(1);
+
+      // assert
+      expect(isTokenKnown).to.equal(true);
+    });
+
+    it("Should revert `add new known token` transaction when called by non-owner", async () => {
+      // assert
+      await expect(
+        ERC1155KnownTokensWrapper.connect(add1).addKnownToken()
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("Should return false when given token id is unknown", async () => {
+      // assert
+      expect(await ERC1155KnownTokensWrapper.isTokenKnown(1)).to.equal(false);
+    });
+
+    it("Should return true when given token id is known", async () => {
+      // act
+      const txn = await ERC1155KnownTokensWrapper.addKnownToken();
 
       await txn.wait();
 
+      // assert
+      expect(await ERC1155KnownTokensWrapper.isTokenKnown(1)).to.equal(true);
+    });
+
+    it("Should revert token mint transaction when token being minted is unknown", async () => {
       await expect(
         ERC1155KnownTokensWrapper.beforeTokenTransfer(
           ethers.constants.AddressZero,
@@ -60,29 +91,24 @@ describe("ERC1155KnownTokens", () => {
           [1],
           [100]
         )
-      ).not.to.be.revertedWith("ERC1155KnownTokens: Unknown TokenId");
+      ).to.be.revertedWith("KnownTokens: Unknown TokenId");
     });
 
-    describe("Token Approval", () => {
-      it("Should approve a token", async () => {
-        const tokenName = "TestToken";
+    it("Should allow token mint when token being minted is known", async () => {
+      // act
+      const txn = await ERC1155KnownTokensWrapper.addKnownToken();
 
-        await ERC1155KnownTokensWrapper.addToken(tokenName);
+      await txn.wait();
 
-        const [isTokenKnown, tokenId]: [boolean, BigNumber] =
-          await ERC1155KnownTokensWrapper.isTokenKnown(tokenName);
-
-        expect(isTokenKnown).to.equal(true);
-        expect(tokenId.eq(1)).to.equal(true);
-      });
-
-      it("Should not approve a token, if called by non-owner", async () => {
-        const tokenName = "TestToken";
-
-        await expect(
-          ERC1155KnownTokensWrapper.connect(add1).addToken(tokenName)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
-      });
+      // assert
+      await expect(
+        ERC1155KnownTokensWrapper.beforeTokenTransfer(
+          ethers.constants.AddressZero,
+          add1.address,
+          [1],
+          [100]
+        )
+      ).not.to.be.revertedWith("KnownTokens: Unknown TokenId");
     });
   });
 });

@@ -6,43 +6,54 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 abstract contract ERC1155KnownTokens is Ownable, ERC1155 {
-    mapping(uint256 => string) private _tokens;
-    uint256 private _totalTokens;
+    /**
+        @dev first approved token id will be `1`,
+            last id will be incremented by `1` to approve new token.
+            `0` is not valid as a token id
+     */
+    uint256 private _lastKnownTokenId;
 
-    function tokens() public view virtual returns(string[] memory) {
-        string[] memory nftsList = new string[](_totalTokens);
+    /// @dev number by which token id will be incremented
+    uint256 constant private TOKEN_ID_INCREMENT_STEP = 1;
 
-        for (uint256 i = 0; i < _totalTokens; i++) {
-            nftsList[i] = _tokens[i + 1];
-        }
+    /**
+        @notice returns first and last known token ids respectively
+        @dev initial ids will be (0, 0),
+            after adding first known token, ids will be (1, 1)
+            after adding second known token, ids will be (1, 2)
+        @return firstApprovedTokenId first known token id, lastApprovedTokenId last known token id
+     */
+    function firstAndLastTokenIds() public view virtual returns(uint256 firstApprovedTokenId, uint256 lastApprovedTokenId) {
+        uint256 firstKnownTokenId = _lastKnownTokenId > 0 ? TOKEN_ID_INCREMENT_STEP : 0;
 
-        return nftsList;
+        return (firstKnownTokenId, _lastKnownTokenId);
     }
 
-    function addToken(string calldata tokenName) public virtual onlyOwner returns(uint256 newTokenId) {
-        _totalTokens += 1;
-
-        uint newNFTId = _totalTokens;
-
-        _tokens[newNFTId] = tokenName;
-
-        return newNFTId;
+    /**
+        @notice returns true if given token id is known, otherwise false
+        @dev `0` is not approved as a known token id
+        @param tokenId id of token
+        @return isTokenApproved boolean to represet token id known status
+     */
+    function isTokenKnown(uint256 tokenId) public view virtual returns(bool isTokenApproved) {
+        return tokenId > 0 && tokenId <= _lastKnownTokenId;
     }
 
-    function isTokenKnown(string calldata tokenName) public view virtual returns(bool isTokenApproved, uint256 tokenId) {
-        bytes32 tokenNameInBytes = keccak256(abi.encodePacked(tokenName));
+    /**
+        @notice adds one more known token id
+        @dev increments _lastKnownTokenId by TOKEN_ID_INCREMENT_STEP
+        @return newTokenId new added known token id
+    */
+    function _addKnownToken() internal virtual onlyOwner returns(uint256 newTokenId) {
+        _lastKnownTokenId += TOKEN_ID_INCREMENT_STEP;
 
-        for (uint256 i = 1; i <= _totalTokens; i++) {
-            string memory currentTokenName = _tokens[i];
-
-            if (keccak256(abi.encodePacked(currentTokenName)) == tokenNameInBytes) {
-                return (true, i);
-            }
-        }
-
-        return (false, 0);
+        return _lastKnownTokenId;
     }
 
+    /**
+        @notice reverts the `minting transaction` if any given `id` in `ids` is unknown
+        @inheritdoc ERC1155
+     */
     function _beforeTokenTransfer(
         address operator,
         address from,
@@ -54,7 +65,6 @@ abstract contract ERC1155KnownTokens is Ownable, ERC1155 {
         // CURRENT STATUS:
         // operator -> no restriction
         // from -> from must be address(0)
-        // to -> no restriction
         // ids -> must be a known id
         // amount -> no restriction
 
@@ -66,11 +76,10 @@ abstract contract ERC1155KnownTokens is Ownable, ERC1155 {
                 uint256 tokenId = ids[i];
 
                 // If token name is not valid, throw error
-                require(bytes(_tokens[tokenId]).length > 0, "ERC1155KnownTokens: Unknown TokenId");
+                require(isTokenKnown(tokenId), "KnownTokens: Unknown TokenId");
             }
         }
 
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
-
 }
