@@ -13,8 +13,16 @@ abstract contract ERC1155KnownTokens is Ownable, ERC1155 {
      */
     uint256 private _lastKnownTokenId;
 
-    /// @dev number by which token id will be incremented
+    /**
+        @dev number by which token id will be incremented
+     */
     uint256 constant private TOKEN_ID_INCREMENT_STEP = 1;
+
+    /**
+        @notice event emitted when new known token added
+        @param tokenId id of token
+     */
+    event NewKnownToken(uint256 tokenId);
 
     /**
         @notice returns first and last known token ids respectively
@@ -47,6 +55,8 @@ abstract contract ERC1155KnownTokens is Ownable, ERC1155 {
     function _addKnownToken() internal virtual onlyOwner returns(uint256 newTokenId) {
         _lastKnownTokenId += TOKEN_ID_INCREMENT_STEP;
 
+        emit NewKnownToken(_lastKnownTokenId);
+        
         return _lastKnownTokenId;
     }
 

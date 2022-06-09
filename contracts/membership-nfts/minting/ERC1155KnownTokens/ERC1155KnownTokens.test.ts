@@ -52,13 +52,12 @@ describe("ERC1155KnownTokens", () => {
     });
 
     it("Should add new known token when called by owner", async () => {
-      // act
-      await ERC1155KnownTokensWrapper.addKnownToken();
+      // act & assert
+      await expect(ERC1155KnownTokensWrapper.addKnownToken())
+        .to.emit(ERC1155KnownTokensWrapper, "NewKnownToken")
+        .withArgs(1);
 
-      const isTokenKnown = await ERC1155KnownTokensWrapper.isTokenKnown(1);
-
-      // assert
-      expect(isTokenKnown).to.equal(true);
+      expect(await ERC1155KnownTokensWrapper.isTokenKnown(1)).to.equal(true);
     });
 
     it("Should revert `add new known token` transaction when called by non-owner", async () => {
