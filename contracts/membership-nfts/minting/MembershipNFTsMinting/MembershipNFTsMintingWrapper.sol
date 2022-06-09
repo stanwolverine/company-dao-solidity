@@ -1,22 +1,17 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "./MembershipNFTsMinting.sol";
 
-import "./minting/MembershipNFTsMinting/MembershipNFTsMinting.sol";
-
-contract MembershipNFTs is ERC1155(""), MembershipNFTsMinting {
-    /**
-        @inheritdoc MembershipNFTsMinting
-     */
+contract MembershipNFTsMintingWrapper is ERC1155(""), MembershipNFTsMinting {
+    /// @inheritdoc MembershipNFTsMinting
     function uri(uint256 tokenId) public view override(ERC1155, MembershipNFTsMinting) returns(string memory tokenURI) {
         return super.uri(tokenId);
     }
 
-    /**
-        @inheritdoc MembershipNFTsMinting
-     */
+    /// @inheritdoc MembershipNFTsMinting
     function _beforeTokenTransfer(
         address operator,
         address from,
@@ -28,4 +23,3 @@ contract MembershipNFTs is ERC1155(""), MembershipNFTsMinting {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 }
-
