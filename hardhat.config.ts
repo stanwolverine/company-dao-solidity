@@ -7,6 +7,7 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "hardhat-watcher";
+import "./setup-chai.ts";
 
 dotenv.config();
 

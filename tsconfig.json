@@ -8,5 +8,5 @@
     "declaration": true
   },
   "include": ["./contracts", "./scripts", "./test", "./typechain"],
-  "files": ["./hardhat.config.ts"]
+  "files": ["./hardhat.config.ts", "./setup-chai.ts"]
 }
